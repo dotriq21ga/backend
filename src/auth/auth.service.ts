@@ -1,26 +1,40 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { LoginDto } from './dto/login.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import { comparePassword } from 'src/utils/util';
+import { TOKEN_EXPIRE } from 'src/config/constant';
+import { ApiAuthResponse } from './dto/apiAuthResponese.dto';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>, private jwtService: JwtService
+  ) { }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async login(data: LoginDto) {
+    try {
+      const user = await this.userRepository.findOne({ where: { email: data.email } });
+      if (!user) {
+        throw new HttpException(
+          "The email does not exist.",
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const isPasswordValid = await comparePassword(data.password, user.password);
+      if (!isPasswordValid) {
+        throw new HttpException(
+          "The email and password are incorrect.",
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      const accessToken = this.jwtService.sign({ email: user.email }, { expiresIn: TOKEN_EXPIRE });
+      return new ApiAuthResponse(accessToken, '', TOKEN_EXPIRE, user.id)
+    } catch (error) {
+      throw error
+    }
   }
 }

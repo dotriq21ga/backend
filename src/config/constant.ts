@@ -1,0 +1,1 @@
+export const TOKEN_EXPIRE = 8640000;
