@@ -13,6 +13,7 @@ export const dataSourceOptions: DataSourceOptions = {
     database: PG_TABLE_NAME,
     entities: ['dist/**/*.entity.js'],
     migrations: ['dist/database/migrations/*{.ts,.js}'],
+    logging: true,
 }
 
 const dataSource = new DataSource(dataSourceOptions);

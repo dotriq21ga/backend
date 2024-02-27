@@ -1,4 +1,5 @@
 import * as bcrypt from 'bcrypt'
+import { arrayNotEmpty } from 'class-validator';
 
 export async function hashPassword(password: string) {
     const salt = await bcrypt.genSalt(10);
@@ -13,4 +14,8 @@ export async function comparePassword(password: string, hashedPassword: string):
     } catch (error) {
         throw error;
     }
+}
+
+export function handleErrorEmptyArray(array : string[]){
+    return arrayNotEmpty(array) ? array : null
 }
